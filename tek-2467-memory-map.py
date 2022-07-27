@@ -5,9 +5,57 @@
 #@menupath
 #@toolbar
 
-from ghidra.program.model.data import Pointer16DataType,ByteDataType
+from ghidra.program.model.data import Pointer16DataType, ByteDataType, ArrayDataType, UnsignedShortDataType
 
 program = createProgram("2467", ghidra.program.model.lang.LanguageID("MC6800:BE:16:default"))
+
+datatype_mgr = program.getDataTypeManager()
+fine = ghidra.program.model.data.StructureDataType("FD", 0)
+fine.add(ByteDataType(), 1, "DMUX2_ON", "")
+fine.add(ByteDataType(), 1, "DMUX0_OFF", "")
+fine.add(ByteDataType(), 1, "DMUX0_ON", "")
+fine.add(ByteDataType(), 1, "PORT3_IN", "")
+fine.add(ByteDataType(), 1, "DMUX1_OFF", "")
+fine.add(ByteDataType(), 1, "DMUX1_ON", "")
+fine.add(ByteDataType(), 1, "LED_CLK", "")
+fine.add(ByteDataType(), 1, "DISP_SEQ_CLK", "")
+fine.add(ByteDataType(), 1, "ATN_CLK", "")
+fine.add(ByteDataType(), 1, "CH2_PA_CLK", "")
+fine.add(ByteDataType(), 1, "CH1_PA_CLK", "")
+fine.add(ByteDataType(), 1, "B_SWP_CLK", "")
+fine.add(ByteDataType(), 1, "A_SWP_CLK", "")
+fine.add(ByteDataType(), 1, "B_TRIG_CLK", "")
+fine.add(ByteDataType(), 1, "A_TRIG_CLK", "")
+fine.add(ByteDataType(), 1, "TRIG_STAT_STRB", "")
+
+fine_array_4 = ArrayDataType(fine, 4, fine.getLength())
+fine_array_4.setName("f")
+
+byte_array_64 = ArrayDataType(ByteDataType(), 64, 1)
+byte_array_64.setName("ba")
+
+byte_array_63 = ArrayDataType(ByteDataType(), 63, 1)
+byte_array_64.setName("ba")
+
+coarse = ghidra.program.model.data.StructureDataType("CD", 0)
+coarse.add(byte_array_64, byte_array_64.getLength(), "DMUX2_OFF", "")
+coarse.add(byte_array_63, byte_array_63.getLength(), "DAC_MSB_CLK", "")
+coarse.add(UnsignedShortDataType(), 2, "DAC_FULL_CLK", "Writes both DAC bytes in a single 16 bit write.")
+coarse.add(byte_array_63, byte_array_63.getLength(), "DAC_LSB_CLK", "")
+coarse.add(byte_array_64, byte_array_64.getLength(), "PORT_1_CLK", "")
+coarse.add(byte_array_64, byte_array_64.getLength(), "ROS_1_CLK", "")
+coarse.add(byte_array_64, byte_array_64.getLength(), "ROS_2_CLK", "")
+coarse.add(byte_array_64, byte_array_64.getLength(), "PORT2_CLK", "")
+coarse.add(fine_array_4, fine_array_4.getLength(), "", "")
+
+io = ghidra.program.model.data.StructureDataType("IO", 0)
+io.add(coarse, coarse.getLength(), "0", "")
+io.add(coarse, coarse.getLength(), "1", "")
+io.add(coarse, coarse.getLength(), "2", "")
+io.add(coarse, coarse.getLength(), "3", "")
+
+io_data_type = datatype_mgr.addDataType(io, None)
+
 memory = program.memory
 
 # The high RAM mapping is modeled as non-overlay, even though that's not accurate.
@@ -17,16 +65,16 @@ memory = program.memory
 u2640 = memory.createUninitializedBlock("U2640", toAddr(0x8000), 0x2000, False)
 u2640.setWrite(True)
 
-# The base RAM is a mapping of the hi RAM mapping. 
+# The base RAM is a mapping of the hi RAM mapping.
 lo_ram = memory.createByteMappedBlock("BASE RAM", toAddr(0x0000), u2640.getStart(), 0x0800, False)
 lo_ram.setWrite(True)
 
 # Create the IO block.
-# TODO(siggi): Give it the right type.
 io_block = memory.createUninitializedBlock("IO", toAddr(0x800), 0x800, False)
 io_block.setWrite(True)
 io_block.setVolatile(True)
-
+# Give it the right type.
+io_data_type = createData(io_block.getStart(), io_data_type)
 
 def createAndDisassembleVector(addr, name, suffix):
     createLabel(addr, "VEC_" + name + "_" + suffix, True)
