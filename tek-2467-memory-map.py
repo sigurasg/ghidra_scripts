@@ -17,22 +17,14 @@ datatype_mgr = program.getDataTypeManager()
 
 def createIODataType(datatype_mgr):
     fine = ghidra.program.model.data.StructureDataType("FD", 0)
-    fine.add(byte, 1, "DMUX2_ON", "")
-    fine.add(byte, 1, "DMUX0_OFF", "")
-    fine.add(byte, 1, "DMUX0_ON", "")
-    fine.add(byte, 1, "PORT3_IN", "")
-    fine.add(byte, 1, "DMUX1_OFF", "")
-    fine.add(byte, 1, "DMUX1_ON", "")
-    fine.add(byte, 1, "LED_CLK", "")
-    fine.add(byte, 1, "DISP_SEQ_CLK", "")
-    fine.add(byte, 1, "ATN_CLK", "")
-    fine.add(byte, 1, "CH2_PA_CLK", "")
-    fine.add(byte, 1, "CH1_PA_CLK", "")
-    fine.add(byte, 1, "B_SWP_CLK", "")
-    fine.add(byte, 1, "A_SWP_CLK", "")
-    fine.add(byte, 1, "B_TRIG_CLK", "")
-    fine.add(byte, 1, "A_TRIG_CLK", "")
-    fine.add(byte, 1, "TRIG_STAT_STRB", "")
+    fields = [
+        "DMUX2_ON", "DMUX0_OFF", "DMUX0_ON", "PORT3_IN",
+        "DMUX1_OFF", "DMUX1_ON", "LED_CLK", "DISP_SEQ_CLK",
+        "ATN_CLK", "CH2_PA_CLK", "CH1_PA_CLK", "B_SWP_CLK",
+        "A_SWP_CLK", "B_TRIG_CLK", "A_TRIG_CLK", "TRIG_STAT_STRB"]
+
+    for field in fields:
+        fine.add(byte, 1, field, "")
 
     fine_array_4 = ArrayDataType(fine, 4, fine.getLength())
     fine_array_4.setName("f")
